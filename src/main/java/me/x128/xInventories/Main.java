@@ -8,7 +8,8 @@ import me.x128.xInventories.listener.WorldChangeEvent;
 import me.x128.xInventories.utils.LogoutGroup;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
-import org.bukkit.event.Listener;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -19,11 +20,9 @@ import java.io.File;
  */
 public class Main extends JavaPlugin {
     private static Plugin plugin;
-    private static LogoutGroup logoutGroup;
 
     public void onEnable() {
         plugin = this;
-        logoutGroup = new LogoutGroup();
 
         //get the config and set it up with defaults if it does not exist
         File config = new File(this.getDataFolder() + File.separator + "config.yml");
@@ -45,23 +44,17 @@ public class Main extends JavaPlugin {
         Bukkit.getServer().getPluginManager().registerEvents(new LogInOutListener(), this);
         getCommand("xinventories").setExecutor(new xInventoriesCommand());
 
-        this.getLogger().info("Plugin enabled");
         checkFileStructure();
+        this.getLogger().info("Plugin enabled");
     }
 
     public void onDisable() {
-        logoutGroup.save(false);
-        logoutGroup = null;
         plugin = null;
         this.getLogger().info("Plugin disabled");
     }
 
     public static Plugin getPlugin() {
         return plugin;
-    }
-
-    public static LogoutGroup getLogoutGroup() {
-        return logoutGroup;
     }
 
     public void checkFileStructure() {
@@ -92,6 +85,29 @@ public class Main extends JavaPlugin {
         File lg = new File(Main.getPlugin().getDataFolder() + File.separator + "logout_groups.yml");
         if (lg.exists()) {
             lg.delete();
+        }
+
+        //convert logout_worlds.yml to individual uuid.yml files
+        File logoutWorlds = new File(Main.getPlugin().getDataFolder() + File.separator + "logout_worlds.yml");
+        if (logoutWorlds.exists()) {
+            YamlConfiguration worldsConfig = YamlConfiguration.loadConfiguration(logoutWorlds);
+            ConfigurationSection worldsConfSect = worldsConfig.getConfigurationSection("v2-logout");
+            int uuidCount = 0;
+            if (worldsConfSect != null) {
+                // Loop through the UUID keys
+                for (String uuid : worldsConfSect.getKeys(false)) {
+                    String group = worldsConfSect.getString(uuid + ".group");
+                    String world = worldsConfSect.getString(uuid + ".world");
+                    LogoutGroup logoutGroup = new LogoutGroup(uuid);
+                    logoutGroup.setGroup(group, world);
+                    logoutGroup.save(false);
+                    ++uuidCount;
+                }
+            }
+            //rename old logout_worlds.yml
+            File logoutWorldsOld = new File(Main.getPlugin().getDataFolder() + File.separator + "logout_worlds_OLD.yml");
+            logoutWorlds.renameTo(logoutWorldsOld);
+            this.getLogger().info(uuidCount + " UUIDs converted from logout_worlds.yml");
         }
     }
 

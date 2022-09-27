@@ -20,11 +20,11 @@ public class FileManager {
     public static void saveConfiguraton(final File f, final FileConfiguration fc, boolean respectAsync) {
         /**
          We now have two methods of saving, user configurable.
-         The regular way (and the safest way) is to save syncronously.
+         The regular way (and the safest way) is to save synchronously.
          This new method of async saving was added in 2.4 to appease
-         someone unsatisfied with syncronous performance.
+         someone unsatisfied with synchronous performance.
 
-         Option for async override is used only for saving the player logout file when plugin is disabled.
+         Option for async override is used only for converting logout_worlds.yml
          **/
 
         if (!Main.getPlugin().getConfig().getBoolean("save-async") || !respectAsync) {

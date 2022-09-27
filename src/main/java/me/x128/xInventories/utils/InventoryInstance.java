@@ -247,8 +247,8 @@ public class InventoryInstance {
         config.set("armor_contents.leggings", pants);
         config.set("armor_contents.boots", boots);
 
-        //save location
-        config.set("location", p.getLocation());
+        //save location - Not used, remove from old config
+        config.set("location", null);
 
         //save potions
         pos = 0;
